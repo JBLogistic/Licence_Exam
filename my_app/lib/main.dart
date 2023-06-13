@@ -2,9 +2,8 @@ import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:flutter_bluetooth_serial/flutter_bluetooth_serial.dart';
 import 'dart:typed_data';
-import 'package:mm_app/Screens/CameraImage.dart';
+import 'package:my_app/Screens/CameraImage.dart';
 
-import 'Providers/ImageProvider.dart';
 void main() {
   runApp(MyApp());
 }
@@ -33,7 +32,6 @@ class _BluetoothHomePageState extends State<BluetoothHomePage> {
   bool _value = false;
   bool _cam = false;
   int request = 0;
-  Matrix matrixData = Matrix();
   Uint8List _dataList= Uint8List.fromList([0,0,0,0]);
   TextEditingController _textFieldController = TextEditingController();
   Future<void> _discoverDevices() async {
@@ -197,7 +195,7 @@ class _BluetoothHomePageState extends State<BluetoothHomePage> {
                   _cam = await Navigator.push(
                     context,
                     MaterialPageRoute(
-                      builder: (context) => CameraImage(matrixData: matrixData,  connection: _connection),
+                      builder: (context) => CameraImage(connection: _connection),
                     ),
                   ),
                   if(_cam){

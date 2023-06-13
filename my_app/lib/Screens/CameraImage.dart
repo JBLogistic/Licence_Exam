@@ -6,9 +6,8 @@ import 'package:flutter_bluetooth_serial/flutter_bluetooth_serial.dart';
 
 class CameraImage extends StatefulWidget {
   static const routeName = '/CameraImage';
-  final Matrix matrixData;
   final BluetoothConnection? connection;
-  const CameraImage({Key? key, required this.matrixData, required this.connection,}) : super(key: key);
+  const CameraImage({Key? key, required this.connection,}) : super(key: key);
 
   @override
   State<CameraImage> createState() => _CameraImageState();
