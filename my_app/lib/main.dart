@@ -1,7 +1,10 @@
-import 'dart:typed_data';
+import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:flutter_bluetooth_serial/flutter_bluetooth_serial.dart';
+import 'dart:typed_data';
+import 'package:mm_app/Screens/CameraImage.dart';
 
+import 'Providers/ImageProvider.dart';
 void main() {
   runApp(MyApp());
 }
@@ -10,102 +13,203 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'Thermal Camera',
+      title: 'HC-05 Connection',
       theme: ThemeData(
         primarySwatch: Colors.blue,
       ),
-      home: MyHomePage(),
+      home: BluetoothHomePage(),
     );
   }
 }
 
-class MyHomePage extends StatefulWidget {
-  MyHomePage({Key? key}) : super(key: key);
-
+class BluetoothHomePage extends StatefulWidget {
   @override
-  _MyHomePageState createState() => _MyHomePageState();
+  _BluetoothHomePageState createState() => _BluetoothHomePageState();
 }
 
-class _MyHomePageState extends State<MyHomePage> {
+class _BluetoothHomePageState extends State<BluetoothHomePage> {
+  BluetoothDevice? _device;
   BluetoothConnection? _connection;
-  List<Color> _imageData = [];
-
-  @override
-  void initState() {
-    super.initState();
-    _scanDevices();
-  }
-
-  Future<void> _scanDevices() async {
+  bool _value = false;
+  bool _cam = false;
+  int request = 0;
+  Matrix matrixData = Matrix();
+  Uint8List _dataList= Uint8List.fromList([0,0,0,0]);
+  TextEditingController _textFieldController = TextEditingController();
+  Future<void> _discoverDevices() async {
+    List<BluetoothDevice> devices = [];
     try {
-      FlutterBluetoothSerial.instance.startDiscovery().listen((device) {
-        if (device.device.name == "NET") {
-          _connectToDevice(device.device);
-        }
-      });
+      devices = await FlutterBluetoothSerial.instance.getBondedDevices();
     } catch (e) {
-      print('Error: $e');
+      print(e);
     }
-  }
 
-  Future<void> _connectToDevice(BluetoothDevice device) async {
-    try {
-      _connection = await BluetoothConnection.toAddress(device.address);
-      _connection!.input!.listen(_onDataReceived).onDone(() {
-        print('Disconnected');
-      });
-    } catch (e) {
-      print('Error: $e');
-    }
-  }
-
-  void _onDataReceived(Uint8List data) {
-    setState(() {
-      _imageData = _parseData(data);
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: Text('Select a device'),
+          content: ListView.builder(
+            itemCount: devices.length,
+            itemBuilder: (BuildContext context, int index) {
+              return ListTile(
+                title: Text(devices[index].name.toString()),
+                subtitle: Text(devices[index].address),
+                onTap: () {
+                  Navigator.pop(context, devices[index]);
+                },
+              );
+            },
+          ),
+        );
+      },
+    ).then((value) {
+      if (value != null) {
+        setState(() {
+          _device = value;
+        });
+      }
     });
   }
 
-  List<Color> _parseData(Uint8List data) {
-    List<Color> colors = [];
-    for (int i = 0; i < data.length; i += 2) {
-      int pixelValue = data[i] + (data[i + 1] << 8);
-      Color color = _getColor(pixelValue);
-      colors.add(color);
+  Future<void> _connectToDevice() async {
+    if (_device == null) {
+      return;
     }
-    return colors;
-  }
 
-  Color _getColor(int pixelValue) {
-    double value = 255 * pixelValue / 0xFFF;
-    return Color.fromARGB(0xFF, value.toInt(), value.toInt(), value.toInt());
+    try {
+      _connection = await BluetoothConnection.toAddress(_device?.address);
+      print('Connected to device');
+      // Perform any further operations with the connection
+    } catch (e) {
+      print(e);
+    }
   }
+  void _sendData() async {
 
+    if (_connection != null && _connection!.isConnected) {
+      _connection!.output.add(_dataList);
+      _connection!.output.allSent.then((_) {
+        print('Sent: $_dataList');
+      });
+    }
+  }
+  List<double> convert(List<String> data){
+    List<double> matrix = List<double>.generate(64, (index) => 0.0, growable: false);
+    int i =0;
+    while(i< matrix.length){
+      matrix[i] = double.parse(data.elementAt(i));
+      i++;
+    }
+    return matrix;
+  }
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('Thermal Camera'),
+        title: Text('Control page'),
       ),
       body: Center(
-        child: _imageData.isEmpty
-            ? CircularProgressIndicator()
-            : Image.memory(
-                Uint8List.fromList(
-                    _imageData.map((value) => value.value).toList()),
-                width: 640,
-                height: 480,
-                fit: BoxFit.cover,
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: <Widget>[
+
+            ElevatedButton(
+              child: Text('Discover Devices'),
+              onPressed: _discoverDevices,
+            ),
+            Text(
+              _device.toString(),
+              style: TextStyle(fontSize: 20),
+            ),
+            SizedBox(height: 20),
+            ElevatedButton(
+              child: Text('Connect to Device'),
+              onPressed: _connectToDevice,
+            ),
+            SizedBox(height: 20),
+            Switch(
+              value: _value,
+              onChanged: (bool value) {
+                setState(() {
+                  _value = value;
+                  _dataList[1] = value ? 0 : 1; // Update the value at index 1
+                  _sendData();
+                });
+              },
+            ),
+            SizedBox(height: 20),
+            if (_value) ...[
+              ElevatedButton(
+                style: ElevatedButton.styleFrom(
+                  minimumSize: Size(100, 50),
+                  padding: EdgeInsets.symmetric(vertical: 16),
+                ),
+                child: Text("^"),
+                onPressed: () => {_dataList[2] = 0,
+                  _dataList[3] = 0,
+                  _sendData()
+                },
               ),
+              SizedBox(height: 20),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  ElevatedButton(
+                    style: ElevatedButton.styleFrom(
+                      minimumSize: Size(100, 50),
+                      padding: EdgeInsets.symmetric(vertical: 16),
+                    ),
+                    child: Text("<-"),
+                    onPressed: () => {_dataList[2] = 1,
+                      _dataList[3] = 0,
+                      _sendData()},
+                  ),
+                  SizedBox(width: 20),
+                  ElevatedButton(
+                    style: ElevatedButton.styleFrom(
+                      minimumSize: Size(100, 50),
+                      padding: EdgeInsets.symmetric(vertical: 16),
+                    ),
+                    child: Text("->"),
+                    onPressed: () => {_dataList[2] = 0, _dataList[3] = 1,_sendData()},
+                  ),
+                ],
+              ),
+              SizedBox(height: 20),
+              ElevatedButton(
+                style: ElevatedButton.styleFrom(
+                  minimumSize: Size(100, 50),
+                  padding: EdgeInsets.symmetric(vertical: 16),
+                ),
+                child: Text("v"),
+                onPressed: () => {_dataList[2] = 1,_dataList[3] = 1,_sendData()},
+              ),
+              ElevatedButton(
+                style: ElevatedButton.styleFrom(
+                  minimumSize: Size(200, 50),
+                  padding: EdgeInsets.symmetric(vertical: 16),
+                ),
+                child: Text('See what the robot sees'),
+                onPressed: () async => {
+                  _dataList[1] = 1,
+                  _sendData(),
+                  _cam = await Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => CameraImage(matrixData: matrixData,  connection: _connection),
+                    ),
+                  ),
+                  if(_cam){
+                    _dataList[1] = 0,
+                    _sendData()
+                  }
+                },
+              ),
+            ]
+          ],
+        ),
       ),
     );
-  }
-
-  @override
-  void dispose() {
-    if (_connection != null) {
-      _connection!.dispose();
-      _connection = null;
-    }
-    super.dispose();
   }
 }
