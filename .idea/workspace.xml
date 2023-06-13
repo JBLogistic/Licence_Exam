@@ -6,9 +6,9 @@
   <component name="ChangeListManager">
     <list default="true" id="c2a36ada-4279-4836-bc4e-5a0149a63c2d" name="Changes" comment="">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/my_app/android/build.gradle" beforeDir="false" afterPath="$PROJECT_DIR$/my_app/android/build.gradle" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/my_app/lib/Screens/CameraImage.dart" beforeDir="false" afterPath="$PROJECT_DIR$/my_app/lib/Screens/CameraImage.dart" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/my_app/lib/main.dart" beforeDir="false" afterPath="$PROJECT_DIR$/my_app/lib/main.dart" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/my_app/test/widget_test.dart" beforeDir="false" afterPath="$PROJECT_DIR$/my_app/test/widget_test.dart" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -33,10 +33,17 @@
     "RunOnceActivity.cidr.known.project.marker": "true",
     "cidr.known.project.marker": "true",
     "dart.analysis.tool.window.visible": "false",
+    "io.flutter.reload.alreadyRun": "true",
     "settings.editor.selected.configurable": "flutter.settings",
     "show.migrate.to.gradle.popup": "false"
   }
 }]]></component>
+  <component name="RunManager">
+    <configuration name="main.dart" type="FlutterRunConfigurationType" factoryName="Flutter" nameIsGenerated="true">
+      <option name="filePath" value="$PROJECT_DIR$/my_app/lib/main.dart" />
+      <method v="2" />
+    </configuration>
+  </component>
   <component name="SpellCheckerSettings" RuntimeDictionaries="0" Folders="0" CustomDictionaries="0" DefaultDictionary="application-level" UseSingleDictionary="true" transferred="true" />
   <component name="TaskManager">
     <task active="true" id="Default" summary="Default task">

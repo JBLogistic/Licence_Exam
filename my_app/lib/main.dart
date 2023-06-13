@@ -131,7 +131,7 @@ class _BluetoothHomePageState extends State<BluetoothHomePage> {
               onChanged: (bool value) {
                 setState(() {
                   _value = value;
-                  _dataList[1] = value ? 0 : 1; // Update the value at index 1
+                  _dataList[0] = value ? 0 : 1; // Update the value at index 1
                   _sendData();
                 });
               },
@@ -192,16 +192,13 @@ class _BluetoothHomePageState extends State<BluetoothHomePage> {
                 onPressed: () async => {
                   _dataList[1] = 1,
                   _sendData(),
-                  _cam = await Navigator.push(
+                  _dataList[1] = await Navigator.push(
                     context,
                     MaterialPageRoute(
                       builder: (context) => CameraImage(connection: _connection),
                     ),
                   ),
-                  if(_cam){
-                    _dataList[1] = 0,
-                    _sendData()
-                  }
+
                 },
               ),
             ]

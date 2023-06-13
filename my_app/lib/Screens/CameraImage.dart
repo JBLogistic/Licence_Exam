@@ -25,22 +25,28 @@ class _CameraImageState extends State<CameraImage> {
   }
   @override
   void dispose() {
-    _subscription?.cancel();
+    _localConnection?.close();
     super.dispose();
   }
 
   void _startListening() {
-    if (_subscription == null && _localConnection != null && _localConnection!.isConnected) {
-      widget.connection!.input!.listen((value) {
-        String data = utf8.decode(value);
-        List<String> dataString = data.split(',');
-        List<double> parsedData = dataString.map(double.parse).toList();
-        print(parsedData);
+    int totalPixels = 64;
+    int pixelsReceived = 0;
+    List<double> receivedData = [];
+
+    _localConnection!.input!.listen((value) {
+      String data = utf8.decode(value);
+      List<String> dataString = data.split(',');
+      List<double> parsedData = dataString.map(double.parse).toList();
+      receivedData.addAll(parsedData);
+
+      pixelsReceived += parsedData.length;
+      if (pixelsReceived >= totalPixels) {
         setState(() {
-          _imageData = _parseData(parsedData);
+          _imageData = _parseData(receivedData);
         });
-      });
-    }
+      }
+    });
   }
   List<Color> _parseData(List<double> data) {
     List<Color> colors = [];
@@ -67,7 +73,7 @@ class _CameraImageState extends State<CameraImage> {
           children: [ ElevatedButton(
             child: Text('Back to the control page'),
             onPressed: () {
-              Navigator.pop(context);
+              Navigator.pop(context,0);
             },
           ),
             Center(
