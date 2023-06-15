@@ -30,10 +30,39 @@ class _BluetoothHomePageState extends State<BluetoothHomePage> {
   BluetoothDevice? _device;
   BluetoothConnection? _connection;
   bool _value = false;
-  bool _cam = false;
+  late int _cam;
   int request = 0;
   Uint8List _dataList= Uint8List.fromList([0,0,0,0]);
   TextEditingController _textFieldController = TextEditingController();
+
+  Future<void> _checkBluetoothStatus() async {
+    bool? isEnabled = await FlutterBluetoothSerial.instance.isEnabled;
+    if (!isEnabled!) {
+      showDialog(
+        context: context,
+        builder: (BuildContext context) {
+          return AlertDialog(
+            title: Text('Bluetooth is disabled'),
+            content: Text('Please enable Bluetooth to continue.'),
+            actions: [
+              ElevatedButton(
+                child: Text('Enable Bluetooth'),
+                onPressed: () async {
+                  Navigator.of(context).pop();
+                  await FlutterBluetoothSerial.instance.requestEnable();
+                },
+              ),
+            ],
+          );
+        },
+      );
+    }
+  }
+  @override
+  void initState() {
+    super.initState();
+    _checkBluetoothStatus();
+  }
   Future<void> _discoverDevices() async {
     List<BluetoothDevice> devices = [];
     try {
@@ -123,7 +152,7 @@ class _BluetoothHomePageState extends State<BluetoothHomePage> {
             SizedBox(height: 20),
             ElevatedButton(
               child: Text('Connect to Device'),
-              onPressed: _connectToDevice,
+              onPressed:  _connectToDevice,
             ),
             SizedBox(height: 20),
             Switch(
@@ -136,6 +165,27 @@ class _BluetoothHomePageState extends State<BluetoothHomePage> {
                 });
               },
             ),
+
+          if (_connection != null ) ...[
+          SizedBox(height:20),
+          ElevatedButton(
+            style: ElevatedButton.styleFrom(
+              minimumSize: Size(200, 50),
+              padding: EdgeInsets.symmetric(vertical: 16),
+            ),
+            child: Text('See what the robot sees'),
+            onPressed: () async => {
+              _dataList[1] = 1,
+              _sendData(),
+              _cam = await Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => CameraImage(connection: _connection),
+                ),
+              ),
+              _dataList[1] = _cam ?? 0,
+            },
+          ),
             SizedBox(height: 20),
             if (_value) ...[
               ElevatedButton(
@@ -183,26 +233,9 @@ class _BluetoothHomePageState extends State<BluetoothHomePage> {
                 child: Text("v"),
                 onPressed: () => {_dataList[2] = 1,_dataList[3] = 1,_sendData()},
               ),
-              ElevatedButton(
-                style: ElevatedButton.styleFrom(
-                  minimumSize: Size(200, 50),
-                  padding: EdgeInsets.symmetric(vertical: 16),
-                ),
-                child: Text('See what the robot sees'),
-                onPressed: () async => {
-                  _dataList[1] = 1,
-                  _sendData(),
-                  _dataList[1] = await Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (context) => CameraImage(connection: _connection),
-                    ),
-                  ),
 
-                },
-              ),
             ]
-          ],
+          ],],
         ),
       ),
     );

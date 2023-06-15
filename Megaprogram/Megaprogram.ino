@@ -1,8 +1,8 @@
-#include <LiquidCrystal_I2C.h>//LCD librarie
-#include<Wire.h>
 #include <SoftwareSerial.h>
+#include <Adafruit_AMG88xx.h>
+Adafruit_AMG88xx amg;
 
-SoftwareSerial bluetooth(2, 3); // RX, TX
+SoftwareSerial bluetooth(10, 11); // RX, TX
 
 #define echoPin1 2
 #define trigPin1 3
@@ -23,17 +23,8 @@ float sensorArray = [  23.1, 23.2, 23.4, 23.6, 23.7, 23.8, 23.9, 24.0,
                 24.0, 24.3, 24.5, 24.7, 24.8, 24.9, 25.0, 25.1];
 
 
-LiquidCrystal_I2C lcd(0x27,20,4);
 void setup() {
   Serial.begin(9600);
-  lcd.init();
-  // Print a message to the LCD.
-  lcd.backlight();
-  lcd.begin(16,2);
-  lcd.setCursor(0,0);
-  lcd.print("Hello!");
-  delay(100);
-  lcd.clear();
   pinMode(trigPin1, OUTPUT);
   pinMode(echoPin1, INPUT);
   pinMode(trigPin2, OUTPUT);
@@ -50,8 +41,6 @@ void setup() {
 }
 
 void loop() {
-  //lcd.clear();
-  //lcd.setCursor(0,0);
   digitalWrite(motorPin2, HIGH);
   digitalWrite(motorPin1, HIGH);
   int distanceForward = Distance(trigPin1,echoPin1);
@@ -64,10 +53,6 @@ void loop() {
     }
   }
   bluetooth.println();
-  //lcd.print("Distance forward:");
-  //lcd.setCursor(0,1);
-  //lcd.print(distanceForward);
-  //delay(250);
   Serial.print(distanceForward);
   if(distanceForward >= 20){
      movementForward(motorPin1,motorPin2); 
